@@ -1,4 +1,5 @@
 import { useStore } from '../store';
+import { useT } from '../lib/i18n';
 
 export function CargoList() {
   const templates = useStore((s) => s.templates);
@@ -7,61 +8,65 @@ export function CargoList() {
   const updateTemplate = useStore((s) => s.updateTemplate);
   const selectedTemplate = useStore((s) => s.selectedTemplate);
   const selectTemplate = useStore((s) => s.selectTemplate);
+  const t = useT();
 
   return (
     <div className="section">
-      <h2>Cargo parcels ({templates.length})</h2>
+      <h2>{t.cargoParcels} ({templates.length})</h2>
       {templates.length === 0 && (
-        <div className="empty">No parcels yet. Use the form below to add one.</div>
+        <div className="empty">{t.noParcelsYet}</div>
       )}
       <div className="cargo-list">
-        {templates.map((t) => {
-          const placedCount = placements.filter((p) => p.templateId === t.id).length;
-          const remaining = Math.max(0, t.quantity - placedCount);
+        {templates.map((tpl) => {
+          const placedCount = placements.filter((p) => p.templateId === tpl.id).length;
+          const remaining = Math.max(0, tpl.quantity - placedCount);
           return (
             <div
-              key={t.id}
-              className={`cargo-item ${selectedTemplate === t.id ? 'selected' : ''}`}
-              onClick={() => selectTemplate(t.id === selectedTemplate ? null : t.id)}
+              key={tpl.id}
+              className={`cargo-item ${selectedTemplate === tpl.id ? 'selected' : ''}`}
+              onClick={() => selectTemplate(tpl.id === selectedTemplate ? null : tpl.id)}
             >
-              <span className="swatch" style={{ background: t.color || '#888' }} />
+              <span className="swatch" style={{ background: tpl.color || '#888' }} />
               <div>
-                <div className="name">{t.name}</div>
+                <div className="name">{tpl.name}</div>
                 <div className="dims">
-                  {t.length}×{t.breadth}×{t.height} m · {t.weight} t · port {t.dischargePort || '—'}
+                  {t.parcelDimsLine(
+                    tpl.length,
+                    tpl.breadth,
+                    tpl.height,
+                    tpl.weight,
+                    tpl.dischargePort,
+                  )}
                 </div>
                 <div className="dims">
-                  Stack: {t.stackPolicy === 'stackable' ? `≤${t.maxStackTier}` : 'no'}
-                  {' · '}Rot: {t.allowRotation ? 'Y' : 'N'}
-                  {' · '}Tol: {t.tolerancePct}%
+                  {t.parcelStackLine(
+                    tpl.stackPolicy === 'stackable' ? `≤${tpl.maxStackTier}` : t.stackNo,
+                    tpl.allowRotation ? t.yes : t.no,
+                    tpl.tolerancePct,
+                  )}
                 </div>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
                 <span className="qty">
-                  {placedCount}/{t.quantity}
+                  {placedCount}/{tpl.quantity}
                 </span>
                 <button
                   className="btn danger"
                   style={{ padding: '2px 6px', fontSize: 10 }}
                   onClick={(e) => {
                     e.stopPropagation();
-                    if (
-                      confirm(
-                        `Удалить партию «${t.name}» вместе со всеми размещёнными местами в трюмах?`,
-                      )
-                    )
-                      removeTemplate(t.id);
+                    if (confirm(t.confirmDeleteParcel(tpl.name))) removeTemplate(tpl.id);
                   }}
                 >
-                  Del
+                  {t.del}
                 </button>
                 <input
                   type="number"
                   step="1"
                   min={placedCount}
-                  value={t.quantity}
+                  value={tpl.quantity}
                   onChange={(e) =>
-                    updateTemplate(t.id, {
+                    updateTemplate(tpl.id, {
                       quantity: Math.max(placedCount, parseInt(e.target.value, 10) || 0),
                     })
                   }
@@ -75,7 +80,7 @@ export function CargoList() {
                     padding: '2px 4px',
                     fontSize: 11,
                   }}
-                  title={`Total parcel size; ${remaining} remaining unplaced`}
+                  title={t.qtyTooltip(remaining)}
                 />
               </div>
             </div>

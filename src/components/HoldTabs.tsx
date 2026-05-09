@@ -1,6 +1,7 @@
 import { useStore } from '../store';
 import { HOLDS } from '../data/ship';
 import { computeHoldLoads } from '../lib/stability';
+import { useT } from '../lib/i18n';
 
 export function HoldTabs() {
   const activeHold = useStore((s) => s.activeHold);
@@ -8,6 +9,7 @@ export function HoldTabs() {
   const placements = useStore((s) => s.placements);
   const templates = useStore((s) => s.templates);
   const loads = computeHoldLoads(placements, templates);
+  const t = useT();
 
   return (
     <div className="hold-tabs">
@@ -22,7 +24,7 @@ export function HoldTabs() {
           >
             <strong>{h.name}</strong>
             <span className="stat">
-              {l.pieces} pcs · {l.weight.toFixed(1)} t · {(ratio * 100).toFixed(0)}%
+              {l.pieces} {t.pcs} · {l.weight.toFixed(1)} t · {(ratio * 100).toFixed(0)}%
             </span>
           </button>
         );

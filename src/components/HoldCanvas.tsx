@@ -6,6 +6,7 @@ import { holdById } from '../data/ship';
 import type { CargoTemplate, PlacedPiece } from '../types';
 import { freeFloorAreas } from '../lib/geometry';
 import { fitsInHold, boxesOverlap, type Box3 } from '../lib/geometry';
+import { useT, useLang } from '../lib/i18n';
 
 interface Props {
   view: 'top' | 'side';
@@ -25,6 +26,10 @@ export function HoldCanvas({ view, colorMode }: Props) {
 
   const hold = holdById(activeHold);
   const wrapRef = useRef<HTMLDivElement | null>(null);
+  const lang = useLang((s) => s.lang);
+  const tr = useT();
+  // referenced so the canvas re-renders on language switch (axis labels)
+  void lang;
 
   // Listen for window resize so the canvas adapts.
   const [size, setSize] = useState({ w: 1100, h: 360 });
@@ -322,11 +327,21 @@ export function HoldCanvas({ view, colorMode }: Props) {
           })}
 
           {/* axis labels */}
-          <Text x={offsetX} y={size.h - 18} text="X (length, m) →" fill="#94a3b8" fontSize={11} />
+          <Text
+            x={offsetX}
+            y={size.h - 18}
+            text={`X (${tr.lengthM.toLowerCase()}) →`}
+            fill="#94a3b8"
+            fontSize={11}
+          />
           <Text
             x={4}
             y={offsetY - 4}
-            text={view === 'top' ? '↓ Y (breadth, m)' : '↑ Z (height, m)'}
+            text={
+              view === 'top'
+                ? `↓ Y (${tr.breadthM.toLowerCase()})`
+                : `↑ Z (${tr.heightM.toLowerCase()})`
+            }
             fill="#94a3b8"
             fontSize={11}
           />

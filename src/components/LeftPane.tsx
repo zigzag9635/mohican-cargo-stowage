@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { useStore } from '../store';
 import { HOLDS, SHIP } from '../data/ship';
 import { computeHoldLoads, computeStability } from '../lib/stability';
+import { useT } from '../lib/i18n';
 
 export function LeftPane() {
   const placements = useStore((s) => s.placements);
@@ -14,6 +15,7 @@ export function LeftPane() {
   const notes = useStore((s) => s.notes);
   const setVoyage = useStore((s) => s.setVoyage);
   const setNotes = useStore((s) => s.setNotes);
+  const t = useT();
 
   const loads = useMemo(
     () => computeHoldLoads(placements, templates),
@@ -36,18 +38,18 @@ export function LeftPane() {
   return (
     <aside className="left-pane">
       <div className="section">
-        <h2>Voyage</h2>
+        <h2>{t.voyage}</h2>
         <div className="field">
-          <label>Voyage / reference</label>
+          <label>{t.voyageRef}</label>
           <input
             type="text"
             value={voyage}
             onChange={(e) => setVoyage(e.target.value)}
-            placeholder="e.g. 24 / Hamburg → St-Petersburg"
+            placeholder={t.voyagePlaceholder}
           />
         </div>
         <div className="field">
-          <label>Notes</label>
+          <label>{t.notes}</label>
           <textarea
             rows={2}
             value={notes}
@@ -57,9 +59,9 @@ export function LeftPane() {
       </div>
 
       <div className="section">
-        <h2>Conditions</h2>
+        <h2>{t.conditions}</h2>
         <div className="field">
-          <label>Sea water density (t/m³)</label>
+          <label>{t.seaWaterDensity}</label>
           <input
             type="number"
             step="0.001"
@@ -74,64 +76,64 @@ export function LeftPane() {
             className={condition === 'sea' ? 'active' : ''}
             onClick={() => setCondition('sea')}
           >
-            At sea
+            {t.atSea}
           </button>
           <button
             className={condition === 'harbour' ? 'active' : ''}
             onClick={() => setCondition('harbour')}
           >
-            In harbour
+            {t.inHarbour}
           </button>
         </div>
       </div>
 
       <div className="section">
-        <h2>Ship summary</h2>
+        <h2>{t.shipSummary}</h2>
         <div className="metric">
-          <span className="label">Cargo total</span>
+          <span className="label">{t.cargoTotal}</span>
           <span className="value">
-            {totalCargoPieces} pcs · {totalCargoW.toFixed(1)} t
+            {totalCargoPieces} {t.pcs} · {totalCargoW.toFixed(1)} t
           </span>
         </div>
         <div className="metric">
-          <span className="label">Total displacement</span>
+          <span className="label">{t.totalDisplacement}</span>
           <span className="value">{stability.displacement.toFixed(1)} t</span>
         </div>
         <div className="metric">
-          <span className="label">Mean draft</span>
+          <span className="label">{t.meanDraft}</span>
           <span className="value">{stability.meanDraft.toFixed(3)} m</span>
         </div>
         <div className="metric">
-          <span className="label">Trim (− = bow / + = stern)</span>
+          <span className="label">{t.trim}</span>
           <span className={`value ${Math.abs(stability.trim) > 0.5 ? 'warn' : ''}`}>
             {stability.trim >= 0 ? '+' : ''}
             {stability.trim.toFixed(3)} m
           </span>
         </div>
         <div className="metric">
-          <span className="label">Draft FP / AP</span>
+          <span className="label">{t.draftFpAp}</span>
           <span className="value">
             {stability.draftFwd.toFixed(2)} / {stability.draftAft.toFixed(2)} m
           </span>
         </div>
         <div className="metric">
-          <span className="label">LCG</span>
+          <span className="label">{t.lcg}</span>
           <span className="value">{stability.lcg.toFixed(2)} m</span>
         </div>
         <div className="metric">
-          <span className="label">VCG</span>
+          <span className="label">{t.vcg}</span>
           <span className="value">{stability.vcg.toFixed(2)} m</span>
         </div>
       </div>
 
       <div className="section">
-        <h2>Strength check ({condition})</h2>
-        <UtilBar label="Shear force (SF)" value={stability.sfUtilization} />
-        <UtilBar label="Bending moment (BM)" value={stability.bmUtilization} />
+        <h2>{t.strengthCheck} ({condition === 'sea' ? t.atSea : t.inHarbour})</h2>
+        <UtilBar label={t.shearForce} value={stability.sfUtilization} />
+        <UtilBar label={t.bendingMoment} value={stability.bmUtilization} />
       </div>
 
       <div className="section">
-        <h2>Holds</h2>
+        <h2>{t.holds}</h2>
         {HOLDS.map((h) => {
           const l = loads.find((x) => x.holdId === h.id)!;
           const ratio = l.weight / h.maxWeight;
@@ -141,7 +143,7 @@ export function LeftPane() {
               <div className="metric">
                 <span className="label">{h.name}</span>
                 <span className="value">
-                  {l.pieces} pcs · {l.weight.toFixed(1)} t
+                  {l.pieces} {t.pcs} · {l.weight.toFixed(1)} t
                 </span>
               </div>
               <div className="bar">
@@ -152,7 +154,7 @@ export function LeftPane() {
               </div>
               <div className="metric" style={{ fontSize: 10, marginTop: 2 }}>
                 <span className="label">
-                  Max tank-top: {l.maxTankTopLoad.toFixed(2)} t/m² (limit {SHIP.tankTopLoad} t/m²)
+                  {t.maxTankTop}: {l.maxTankTopLoad.toFixed(2)} t/m² ({t.limit} {SHIP.tankTopLoad} t/m²)
                 </span>
                 <span className={`value ${tankUtil > 1 ? 'bad' : tankUtil > 0.9 ? 'warn' : 'good'}`}>
                   {(tankUtil * 100).toFixed(0)}%

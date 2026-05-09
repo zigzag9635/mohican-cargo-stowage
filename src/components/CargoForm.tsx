@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { useStore, makeId } from '../store';
 import type { CargoTemplate } from '../types';
+import { useT } from '../lib/i18n';
 
 export function CargoForm() {
   const addTemplate = useStore((s) => s.addTemplate);
+  const t = useT();
 
   const [form, setForm] = useState<Omit<CargoTemplate, 'id' | 'color'>>({
     name: '',
@@ -43,11 +45,11 @@ export function CargoForm() {
 
   function submit() {
     if (!form.name.trim()) {
-      alert('Введите название груза.');
+      alert(t.enterName);
       return;
     }
     if (form.length <= 0 || form.breadth <= 0 || form.height <= 0 || form.weight <= 0) {
-      alert('Размеры и вес должны быть положительными.');
+      alert(t.nonPositive);
       return;
     }
     addTemplate({ ...form, id: makeId('c') });
@@ -56,19 +58,19 @@ export function CargoForm() {
 
   return (
     <div className="section">
-      <h2>Add cargo parcel</h2>
+      <h2>{t.addCargoParcel}</h2>
       <div className="field">
-        <label>Name</label>
+        <label>{t.name}</label>
         <input
           type="text"
           value={form.name}
           onChange={(e) => set('name', e.target.value)}
-          placeholder="Pipe bundle 12 m"
+          placeholder={t.namePlaceholder}
         />
       </div>
       <div className="row three">
         <div className="field">
-          <label>Length, m</label>
+          <label>{t.lengthM}</label>
           <input
             type="number"
             step="0.01"
@@ -77,7 +79,7 @@ export function CargoForm() {
           />
         </div>
         <div className="field">
-          <label>Breadth, m</label>
+          <label>{t.breadthM}</label>
           <input
             type="number"
             step="0.01"
@@ -86,7 +88,7 @@ export function CargoForm() {
           />
         </div>
         <div className="field">
-          <label>Height, m</label>
+          <label>{t.heightM}</label>
           <input
             type="number"
             step="0.01"
@@ -97,7 +99,7 @@ export function CargoForm() {
       </div>
       <div className="row">
         <div className="field">
-          <label>Weight per piece, t</label>
+          <label>{t.weightPerPiece}</label>
           <input
             type="number"
             step="0.01"
@@ -106,7 +108,7 @@ export function CargoForm() {
           />
         </div>
         <div className="field">
-          <label>Quantity, pcs</label>
+          <label>{t.quantityPcs}</label>
           <input
             type="number"
             step="1"
@@ -117,7 +119,7 @@ export function CargoForm() {
       </div>
       <div className="row">
         <div className="field">
-          <label>Dimensional tolerance, %</label>
+          <label>{t.tolerancePct}</label>
           <input
             type="number"
             step="0.5"
@@ -128,21 +130,21 @@ export function CargoForm() {
           />
         </div>
         <div className="field">
-          <label>Stack policy</label>
+          <label>{t.stackPolicy}</label>
           <select
             value={form.stackPolicy}
             onChange={(e) =>
               set('stackPolicy', e.target.value as CargoTemplate['stackPolicy'])
             }
           >
-            <option value="no_stack">Single tier only</option>
-            <option value="stackable">Stackable</option>
+            <option value="no_stack">{t.singleTier}</option>
+            <option value="stackable">{t.stackable}</option>
           </select>
         </div>
       </div>
       {form.stackPolicy === 'stackable' && (
         <div className="field">
-          <label>Max stacking tiers</label>
+          <label>{t.maxStackTiers}</label>
           <input
             type="number"
             step="1"
@@ -159,11 +161,11 @@ export function CargoForm() {
           checked={form.allowRotation}
           onChange={(e) => set('allowRotation', e.target.checked)}
         />
-        Allow 90° rotation around vertical axis
+        {t.allowRotation}
       </label>
       <div className="row">
         <div className="field">
-          <label>Discharge port</label>
+          <label>{t.dischargePort}</label>
           <input
             type="text"
             value={form.dischargePort}
@@ -172,7 +174,7 @@ export function CargoForm() {
           />
         </div>
         <div className="field">
-          <label>Shipper / BL</label>
+          <label>{t.shipperBl}</label>
           <input
             type="text"
             value={form.shipper}
@@ -183,15 +185,15 @@ export function CargoForm() {
       </div>
       <div style={{ display: 'flex', gap: 6, marginTop: 4 }}>
         <button className="btn primary" onClick={submit}>
-          Add parcel
+          {t.addParcel}
         </button>
         <button className="btn" onClick={reset}>
-          Reset
+          {t.reset}
         </button>
       </div>
       {form.tolerancePct > 0 && (
         <div className="empty" style={{ marginTop: 6 }}>
-          Effective dims used by the packer:{' '}
+          {t.effectiveDims}:{' '}
           {(form.length * (1 + form.tolerancePct / 100)).toFixed(2)} ×{' '}
           {(form.breadth * (1 + form.tolerancePct / 100)).toFixed(2)} ×{' '}
           {(form.height * (1 + form.tolerancePct / 100)).toFixed(2)} m

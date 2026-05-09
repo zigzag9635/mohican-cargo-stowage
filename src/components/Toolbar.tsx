@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useStore } from '../store';
 import { exportPlanToPdf } from '../lib/pdf';
 import { SHIP } from '../data/ship';
+import { useT, useLang } from '../lib/i18n';
 
 declare global {
   interface Window {
@@ -22,6 +23,7 @@ declare global {
         channel: 'new' | 'open' | 'save' | 'export-pdf' | 'about',
         cb: () => void,
       ) => () => void;
+      setLang?: (lang: 'en' | 'ru') => void;
     };
   }
 }
@@ -30,6 +32,9 @@ export function Toolbar() {
   const exportPlan = useStore((s) => s.exportPlan);
   const loadPlan = useStore((s) => s.loadPlan);
   const newPlan = useStore((s) => s.newPlan);
+  const t = useT();
+  const lang = useLang((s) => s.lang);
+  const setLang = useLang((s) => s.setLang);
 
   async function handleSave() {
     const plan = exportPlan();
@@ -40,7 +45,6 @@ export function Toolbar() {
         json,
       );
     } else {
-      // Fallback: download via Blob (works in dev / browser-only mode)
       const blob = new Blob([json], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -59,7 +63,7 @@ export function Toolbar() {
         const plan = JSON.parse(res.data);
         loadPlan(plan);
       } catch {
-        alert('Invalid plan file.');
+        alert(t.invalidPlanFile);
       }
     } else {
       const inp = document.createElement('input');
@@ -73,7 +77,7 @@ export function Toolbar() {
           try {
             loadPlan(JSON.parse(String(reader.result)));
           } catch {
-            alert('Invalid plan file.');
+            alert(t.invalidPlanFile);
           }
         };
         reader.readAsText(file);
@@ -102,10 +106,12 @@ export function Toolbar() {
   }
 
   function handleNew() {
-    if (confirm('Start a new plan?  Unsaved changes will be lost.')) newPlan();
+    if (confirm(t.confirmNewPlan)) newPlan();
   }
 
   useEffect(() => {
+    // sync menu language with renderer language on mount and on every change
+    window.api?.setLang?.(lang);
     const off1 = window.api?.onMenu('new', handleNew);
     const off2 = window.api?.onMenu('open', handleOpen);
     const off3 = window.api?.onMenu('save', handleSave);
@@ -117,17 +123,38 @@ export function Toolbar() {
       off4?.();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [lang]);
+
+  function chooseLang(l: 'en' | 'ru') {
+    setLang(l);
+    window.api?.setLang?.(l);
+  }
 
   return (
     <div className="toolbar">
-      <h1>M/V Mohican — Cargo Stowage Planner</h1>
-      <button onClick={handleNew}>New</button>
-      <button onClick={handleOpen}>Open…</button>
-      <button onClick={handleSave}>Save JSON</button>
-      <button onClick={handleExportPdf}>Export PDF</button>
+      <h1>{t.appTitle}</h1>
+      <button onClick={handleNew}>{t.menuNew}</button>
+      <button onClick={handleOpen}>{t.menuOpen}</button>
+      <button onClick={handleSave}>{t.menuSave}</button>
+      <button onClick={handleExportPdf}>{t.menuExportPdf}</button>
       <span className="spacer" />
-      <span className="empty">offline · Windows-ready</span>
+      <div className="lang-toggle">
+        <button
+          className={lang === 'ru' ? 'active' : ''}
+          onClick={() => chooseLang('ru')}
+          title="Русский"
+        >
+          RU
+        </button>
+        <button
+          className={lang === 'en' ? 'active' : ''}
+          onClick={() => chooseLang('en')}
+          title="English"
+        >
+          EN
+        </button>
+      </div>
+      <span className="empty">{t.statusOffline}</span>
     </div>
   );
 }

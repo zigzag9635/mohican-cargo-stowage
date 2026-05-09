@@ -5,6 +5,7 @@ import { HOLDS, holdById } from '../data/ship';
 import { autoPackOneHold } from '../lib/packing';
 import { SHIP } from '../data/ship';
 import type { HoldId, PlacedPiece } from '../types';
+import { useT } from '../lib/i18n';
 
 export function AutoPanel() {
   const templates = useStore((s) => s.templates);
@@ -26,41 +27,34 @@ export function AutoPanel() {
   const [sternTrim, setSternTrim] = useState(0.5);
   const [running, setRunning] = useState(false);
   const [result, setResult] = useState<string>('');
+  const t = useT();
 
   function packCurrentHold() {
     const r = autoPack(activeHold);
-    setResult(
-      `Hold ${activeHold}: placed ${r.placed} pcs (out of total parcel sizes; ${r.unplaced} not fitted across all parcels).`,
-    );
+    setResult(t.holdResult(activeHold, r.placed, r.unplaced));
   }
 
   function clearCurrentHold() {
-    if (
-      confirm(
-        `Очистить трюм ${activeHold}? Все размещённые в нём грузовые места будут удалены.`,
-      )
-    )
-      clearHold(activeHold);
+    if (confirm(t.confirmClearHold(activeHold))) clearHold(activeHold);
   }
 
   function packAllHolds() {
     let total = 0;
     let working = placements.slice();
     for (const h of HOLDS) {
-      // remove existing placements of this hold from snapshot
       working = working.filter((p) => p.holdId !== h.id);
       const result = autoPackOneHold(h, templates, SHIP.tankTopLoad);
       working.push(...result.placed);
       total += result.placed.length;
     }
     setPlacements(working);
-    setResult(`All holds: placed ${total} pcs (templates marked with quantity unchanged).`);
+    setResult(t.allHoldsResult(total));
   }
 
   async function distribute() {
-    const tpl = templates.find((t) => t.id === selectedTemplate) ?? templates[0];
+    const tpl = templates.find((tt) => tt.id === selectedTemplate) ?? templates[0];
     if (!tpl) {
-      alert('Сначала добавьте партию груза.');
+      alert(t.addParcelFirst);
       return;
     }
     const m: DistributeMode =
@@ -72,7 +66,7 @@ export function AutoPanel() {
     setRunning(true);
     const res = autoDistribute({
       template: tpl,
-      existingTemplates: templates.filter((t) => t.id !== tpl.id),
+      existingTemplates: templates.filter((tt) => tt.id !== tpl.id),
       existingPlacements: placements.filter((p) => p.templateId !== tpl.id),
       seawaterDensity,
       condition,
@@ -80,10 +74,11 @@ export function AutoPanel() {
     });
     setRunning(false);
     setResult(
-      `Distributed parcel «${tpl.name}»: ` +
-        `H1=${res.byHold[1]}  H2=${res.byHold[2]}  H3=${res.byHold[3]}  H4=${res.byHold[4]} ` +
-        `(total ${res.totalPlaced}, est. trim ${res.estTrim.toFixed(2)} m, mean draft ${res.estMeanDraft.toFixed(2)} m)` +
-        (res.feasible ? '' : '  ⚠ exceeds SF/BM limits!'),
+      t.distributedParcel(
+        tpl.name,
+        res.byHold[1], res.byHold[2], res.byHold[3], res.byHold[4],
+        res.totalPlaced, res.estTrim, res.estMeanDraft,
+      ) + (res.feasible ? '' : t.feasibilityWarn),
     );
     // Update template quantity to reflect total recommended.
     updateTemplate(tpl.id, { quantity: res.totalPlaced });
@@ -106,7 +101,7 @@ export function AutoPanel() {
 
   return (
     <div className="section">
-      <h2>Auto-layout</h2>
+      <h2>{t.autoLayout}</h2>
       <div style={{ display: 'flex', gap: 6, marginBottom: 8, flexWrap: 'wrap' }}>
         {HOLDS.map((h) => (
           <button
@@ -120,34 +115,34 @@ export function AutoPanel() {
       </div>
       <div style={{ display: 'flex', gap: 6, marginBottom: 6, flexWrap: 'wrap' }}>
         <button className="btn primary" onClick={packCurrentHold}>
-          Pack hold {activeHold}
+          {t.packHoldN(activeHold)}
         </button>
         <button className="btn" onClick={packAllHolds}>
-          Pack all holds
+          {t.packAllHolds}
         </button>
         <button className="btn danger" onClick={clearCurrentHold}>
-          Clear hold {activeHold}
+          {t.clearHoldN(activeHold)}
         </button>
       </div>
 
-      <h2 style={{ marginTop: 14 }}>Auto-distribute parcel</h2>
+      <h2 style={{ marginTop: 14 }}>{t.autoDistribute}</h2>
       <div className="empty" style={{ marginBottom: 6 }}>
-        Selected parcel: {selectedTemplate ? templates.find((t) => t.id === selectedTemplate)?.name : '(use the first parcel)'}
+        {t.selectedParcel}: {selectedTemplate ? templates.find((tt) => tt.id === selectedTemplate)?.name : t.useFirstParcel}
       </div>
       <div className="subtab">
         <button className={mode === 'quantity' ? 'active' : ''} onClick={() => setMode('quantity')}>
-          By quantity
+          {t.byQuantity}
         </button>
         <button className={mode === 'meanDraft' ? 'active' : ''} onClick={() => setMode('meanDraft')}>
-          By mean draft
+          {t.byMeanDraft}
         </button>
         <button className={mode === 'sternTrim' ? 'active' : ''} onClick={() => setMode('sternTrim')}>
-          By stern trim
+          {t.bySternTrim}
         </button>
       </div>
       {mode === 'quantity' && (
         <div className="field">
-          <label>Quantity, pcs</label>
+          <label>{t.quantityPcs}</label>
           <input
             type="number"
             step="1"
@@ -159,7 +154,7 @@ export function AutoPanel() {
       )}
       {mode === 'meanDraft' && (
         <div className="field">
-          <label>Target mean draft, m (≤ {SHIP.summerDraft})</label>
+          <label>{t.targetMeanDraft(SHIP.summerDraft)}</label>
           <input
             type="number"
             step="0.01"
@@ -172,7 +167,7 @@ export function AutoPanel() {
       )}
       {mode === 'sternTrim' && (
         <div className="field">
-          <label>Target trim, m (positive = stern down)</label>
+          <label>{t.targetTrim}</label>
           <input
             type="number"
             step="0.01"
@@ -182,7 +177,7 @@ export function AutoPanel() {
         </div>
       )}
       <button className="btn primary" onClick={distribute} disabled={running}>
-        {running ? 'Calculating…' : 'Distribute & pack'}
+        {running ? t.calculating : t.distributeAndPack}
       </button>
       {result && (
         <div

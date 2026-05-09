@@ -19,6 +19,7 @@ const api = {
     ipcRenderer.on(`menu:${channel}`, listener);
     return () => ipcRenderer.removeListener(`menu:${channel}`, listener);
   },
+  setLang: (lang: 'en' | 'ru') => ipcRenderer.invoke('app:set-lang', lang),
 };
 
 contextBridge.exposeInMainWorld('api', api);
