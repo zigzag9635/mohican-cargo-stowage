@@ -161,12 +161,15 @@ export function HoldCanvas({ view, colorMode }: Props) {
       newX = clamp(local.x, 0, hold.length - lDim);
       newZ = clamp(local.y, 0, hold.height - tpl.height);
     }
+    const origTl = toScreen(
+      p.x,
+      view === 'top' ? p.y : p.z + tpl.height,
+    );
     const trial: Box3 = { x: newX, y: newY, z: newZ, l: lDim, w: wDim, h: tpl.height };
     if (!fitsInHold(trial, hold)) {
-      node.position({ x: 0, y: 0 });
+      node.position({ x: origTl.x, y: origTl.y });
       return;
     }
-    // Reject overlap
     const others: Box3[] = placementsHere
       .filter((q) => q.id !== p.id)
       .map((q) => {
@@ -177,13 +180,15 @@ export function HoldCanvas({ view, colorMode }: Props) {
         return { x: q.x, y: q.y, z: q.z, l: dl, w: dw, h: t.height };
       });
     if (others.some((b) => boxesOverlap(trial, b))) {
-      node.position({ x: 0, y: 0 });
+      node.position({ x: origTl.x, y: origTl.y });
       return;
     }
     updatePlacement(p.id, { x: newX, y: newY, z: newZ });
-    // The rectangle's parent group will pick up new x/y on next render
-    // — we reset the drag delta to zero meanwhile.
-    node.position({ x: 0, y: 0 });
+    const newTl = toScreen(
+      newX,
+      view === 'top' ? newY : newZ + tpl.height,
+    );
+    node.position({ x: newTl.x, y: newTl.y });
   }
 
   // Background grid lines (every 1 m and labelled every 5 m)
