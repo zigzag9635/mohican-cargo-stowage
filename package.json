@@ -67,7 +67,7 @@
     },
     "nsis": {
       "oneClick": false,
-      "allowToChangeInstallationDir": true,
+      "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true
     },
     "linux": {
