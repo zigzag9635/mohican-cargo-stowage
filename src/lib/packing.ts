@@ -72,51 +72,32 @@ export function packHold(
   const clearance = opts.clearance ?? 0.05;
   const placedBoxes: Box3[] = [];
   const placedPieces: PlacedPiece[] = [];
-  // tierStack[`${templateId}@${tier}`] keeps track of "stacks" of identical
-  // pieces — i.e. for stackable templates, when piece N is placed at
-  // tier 0, piece N+1 may be placed directly on top at tier 1, etc.
-  const stackTops: Map<string, { x: number; y: number; w: number; l: number; nextTier: number; maxTier: number; baseZ: number; templateId: string }> = new Map();
+  // For each (x, y) footprint occupied by a stackable template, we
+  // remember the next free z slot and the next tier index.  When the
+  // next identical piece arrives we drop it directly on top.
+  const stackTops: Map<
+    string,
+    {
+      x: number;
+      y: number;
+      w: number;
+      l: number;
+      /** absolute z of the next slot (top of the topmost placed piece) */
+      nextZ: number;
+      /** tier index of the next slot (0-based; 1 means "second piece") */
+      nextTier: number;
+      /** maximum number of pieces in a stack (== template.maxStackTier) */
+      maxTier: number;
+      templateId: string;
+    }
+  > = new Map();
   const unplaced: PieceInstance[] = [];
 
-  // Tank-top floor load grid (0.5 m × 0.5 m cells).  We accumulate the
-  // weight of every piece sitting on the floor that occupies each cell;
-  // the load equals (total weight projected onto the cell) / cell area.
-  const cellSize = 0.5;
-  const nCellsX = Math.ceil(hold.length / cellSize);
-  const nCellsY = Math.ceil(hold.breadth / cellSize);
-  const floorLoad = new Float64Array(nCellsX * nCellsY);
-  const cellArea = cellSize * cellSize;
-
-  function loadAt(x: number, y: number, l: number, w: number): number {
-    let max = 0;
-    const x0 = Math.max(0, Math.floor(x / cellSize));
-    const x1 = Math.min(nCellsX, Math.ceil((x + l) / cellSize));
-    const y0 = Math.max(0, Math.floor(y / cellSize));
-    const y1 = Math.min(nCellsY, Math.ceil((y + w) / cellSize));
-    for (let i = x0; i < x1; i++) {
-      for (let j = y0; j < y1; j++) {
-        const v = floorLoad[i * nCellsY + j];
-        if (v > max) max = v;
-      }
-    }
-    return max;
-  }
-
-  function addLoad(x: number, y: number, l: number, w: number, weight: number) {
-    // distribute the weight uniformly over the projection
-    const totalCells = (l / cellSize) * (w / cellSize);
-    if (totalCells <= 0) return;
-    const perCell = weight / (totalCells * cellArea);
-    const x0 = Math.max(0, Math.floor(x / cellSize));
-    const x1 = Math.min(nCellsX, Math.ceil((x + l) / cellSize));
-    const y0 = Math.max(0, Math.floor(y / cellSize));
-    const y1 = Math.min(nCellsY, Math.ceil((y + w) / cellSize));
-    for (let i = x0; i < x1; i++) {
-      for (let j = y0; j < y1; j++) {
-        floorLoad[i * nCellsY + j] += perCell;
-      }
-    }
-  }
+  // Tank-top load is checked exactly against the candidate footprint:
+  // because pieces never overlap on the tank top, each footprint sees
+  // only the weight of the (single) stack sitting on it.  We therefore
+  // do not need a discretised grid — we just compare
+  // (stack_weight / footprint_area) against the tank-top limit.
 
   // Candidate placement points (bottom-left-fill).  Always start from
   // (0, 0) on the tank top and add new candidates whenever a piece is
@@ -152,8 +133,10 @@ export function packHold(
         };
         if (!fitsInHold(box, hold)) continue;
         if (placedBoxes.some((b) => boxesOverlap(box, b))) continue;
-        // tank-top weight check
-        const loadOnFloor = loadAt(box.x, box.y, box.l, box.w) + piece.weight / (box.l * box.w);
+        // tank-top weight check — account for the worst-case full stack
+        // that could end up on this footprint.
+        const tiers = piece.stackable ? piece.maxStackTier : 1;
+        const loadOnFloor = (piece.weight * tiers) / (box.l * box.w);
         if (loadOnFloor > shipTankTopLoad) continue;
         return makePlacement(piece, box, 0);
       }
@@ -166,20 +149,17 @@ export function packHold(
     for (const [, stack] of stackTops) {
       if (stack.templateId !== piece.templateId) continue;
       if (stack.nextTier >= stack.maxTier) continue;
-      // Place a copy directly on top of the stack
       const box: Box3 = {
         x: stack.x,
         y: stack.y,
-        z: stack.baseZ + stack.nextTier * piece.h,
+        z: stack.nextZ,
         l: stack.l,
         w: stack.w,
         h: piece.h,
       };
       if (!fitsInHold(box, hold)) continue;
       if (placedBoxes.some((b) => boxesOverlap(box, b))) continue;
-      const placed = makePlacement(piece, box, stack.nextTier);
-      stack.nextTier += 1;
-      return placed;
+      return makePlacement(piece, box, stack.nextTier);
     }
     return null;
   }
@@ -199,9 +179,6 @@ export function packHold(
     };
     placedBoxes.push({ ...box });
     placedPieces.push(placement);
-    if (box.z < 1e-6) {
-      addLoad(box.x, box.y, box.l, box.w, piece.weight);
-    }
     if (piece.stackable && piece.maxStackTier > 1) {
       const key = `${piece.templateId}@${box.x.toFixed(3)},${box.y.toFixed(3)}`;
       stackTops.set(key, {
@@ -209,7 +186,7 @@ export function packHold(
         y: box.y,
         l: box.l,
         w: box.w,
-        baseZ: box.z,
+        nextZ: box.z + box.h,
         nextTier: tier + 1,
         maxTier: piece.maxStackTier,
         templateId: piece.templateId,

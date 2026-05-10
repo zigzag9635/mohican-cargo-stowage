@@ -17,6 +17,8 @@ interface StoreState {
   placements: PlacedPiece[];
   selectedTemplate: string | null;
   selectedPlacement: string | null;
+  /** template currently being edited in CargoForm; null → "add new" mode */
+  editingTemplate: string | null;
   activeHold: HoldId;
 
   setVoyage: (v: string) => void;
@@ -26,6 +28,7 @@ interface StoreState {
   setActiveHold: (h: HoldId) => void;
   selectTemplate: (id: string | null) => void;
   selectPlacement: (id: string | null) => void;
+  setEditingTemplate: (id: string | null) => void;
 
   addTemplate: (t: CargoTemplate) => void;
   updateTemplate: (id: string, patch: Partial<CargoTemplate>) => void;
@@ -68,6 +71,7 @@ export const useStore = create<StoreState>((set, get) => ({
   placements: [],
   selectedTemplate: null,
   selectedPlacement: null,
+  editingTemplate: null,
   activeHold: 1,
 
   setVoyage: (v) => set({ voyage: v }),
@@ -77,6 +81,7 @@ export const useStore = create<StoreState>((set, get) => ({
   setActiveHold: (h) => set({ activeHold: h }),
   selectTemplate: (id) => set({ selectedTemplate: id }),
   selectPlacement: (id) => set({ selectedPlacement: id }),
+  setEditingTemplate: (id) => set({ editingTemplate: id }),
 
   addTemplate: (t) =>
     set((s) => ({
@@ -92,6 +97,7 @@ export const useStore = create<StoreState>((set, get) => ({
       templates: s.templates.filter((t) => t.id !== id),
       placements: s.placements.filter((p) => p.templateId !== id),
       selectedTemplate: s.selectedTemplate === id ? null : s.selectedTemplate,
+      editingTemplate: s.editingTemplate === id ? null : s.editingTemplate,
     })),
 
   addPlacement: (p) => set((s) => ({ placements: [...s.placements, p] })),
@@ -132,6 +138,7 @@ export const useStore = create<StoreState>((set, get) => ({
       placements: plan.placements,
       selectedTemplate: null,
       selectedPlacement: null,
+      editingTemplate: null,
     }),
   exportPlan: () => {
     const s = get();
@@ -158,6 +165,7 @@ export const useStore = create<StoreState>((set, get) => ({
       placements: [],
       selectedTemplate: null,
       selectedPlacement: null,
+      editingTemplate: null,
       activeHold: 1,
     }),
 }));

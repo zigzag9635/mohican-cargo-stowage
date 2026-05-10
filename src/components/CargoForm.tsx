@@ -1,46 +1,56 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useStore, makeId } from '../store';
 import type { CargoTemplate } from '../types';
 import { useT } from '../lib/i18n';
 
+type FormState = Omit<CargoTemplate, 'id' | 'color'>;
+
+const DEFAULT_FORM: FormState = {
+  name: '',
+  length: 1.2,
+  breadth: 0.8,
+  height: 1.0,
+  weight: 0.5,
+  tolerancePct: 0,
+  allowRotation: true,
+  stackPolicy: 'no_stack',
+  maxStackTier: 1,
+  dischargePort: '',
+  shipper: '',
+  quantity: 10,
+};
+
 export function CargoForm() {
   const addTemplate = useStore((s) => s.addTemplate);
+  const updateTemplate = useStore((s) => s.updateTemplate);
+  const editingTemplateId = useStore((s) => s.editingTemplate);
+  const setEditingTemplate = useStore((s) => s.setEditingTemplate);
+  const editingTemplate = useStore((s) =>
+    s.editingTemplate ? s.templates.find((tt) => tt.id === s.editingTemplate) ?? null : null,
+  );
   const t = useT();
 
-  const [form, setForm] = useState<Omit<CargoTemplate, 'id' | 'color'>>({
-    name: '',
-    length: 1.2,
-    breadth: 0.8,
-    height: 1.0,
-    weight: 0.5,
-    tolerancePct: 0,
-    allowRotation: true,
-    stackPolicy: 'no_stack',
-    maxStackTier: 1,
-    dischargePort: '',
-    shipper: '',
-    quantity: 10,
-  });
+  const [form, setForm] = useState<FormState>(DEFAULT_FORM);
 
-  function set<K extends keyof typeof form>(key: K, value: (typeof form)[K]) {
+  // When editing a template, copy its values into the form.
+  useEffect(() => {
+    if (editingTemplate) {
+      const { id: _id, color: _color, ...rest } = editingTemplate;
+      void _id;
+      void _color;
+      setForm(rest);
+    } else {
+      setForm(DEFAULT_FORM);
+    }
+  }, [editingTemplateId, editingTemplate]);
+
+  function set<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((f) => ({ ...f, [key]: value }));
   }
 
   function reset() {
-    setForm({
-      name: '',
-      length: 1.2,
-      breadth: 0.8,
-      height: 1.0,
-      weight: 0.5,
-      tolerancePct: 0,
-      allowRotation: true,
-      stackPolicy: 'no_stack',
-      maxStackTier: 1,
-      dischargePort: '',
-      shipper: '',
-      quantity: 10,
-    });
+    setForm(DEFAULT_FORM);
+    if (editingTemplateId) setEditingTemplate(null);
   }
 
   function submit() {
@@ -52,13 +62,25 @@ export function CargoForm() {
       alert(t.nonPositive);
       return;
     }
-    addTemplate({ ...form, id: makeId('c') });
-    reset();
+    if (editingTemplateId) {
+      updateTemplate(editingTemplateId, form);
+      setEditingTemplate(null);
+      setForm(DEFAULT_FORM);
+    } else {
+      addTemplate({ ...form, id: makeId('c') });
+      reset();
+    }
   }
 
+  const isEditing = !!editingTemplateId;
+
   return (
-    <div className="section">
-      <h2>{t.addCargoParcel}</h2>
+    <div className={`section ${isEditing ? 'editing' : ''}`}>
+      <h2>
+        {isEditing
+          ? `${t.editParcel}: ${editingTemplate?.name || ''}`
+          : t.addCargoParcel}
+      </h2>
       <div className="field">
         <label>{t.name}</label>
         <input
@@ -185,12 +207,17 @@ export function CargoForm() {
       </div>
       <div style={{ display: 'flex', gap: 6, marginTop: 4 }}>
         <button className="btn primary" onClick={submit}>
-          {t.addParcel}
+          {isEditing ? t.saveChanges : t.addParcel}
         </button>
         <button className="btn" onClick={reset}>
-          {t.reset}
+          {isEditing ? t.cancel : t.reset}
         </button>
       </div>
+      {isEditing && (
+        <div className="empty" style={{ marginTop: 6 }}>
+          {t.editingHint}
+        </div>
+      )}
       {form.tolerancePct > 0 && (
         <div className="empty" style={{ marginTop: 6 }}>
           {t.effectiveDims}:{' '}

@@ -8,6 +8,8 @@ export function CargoList() {
   const updateTemplate = useStore((s) => s.updateTemplate);
   const selectedTemplate = useStore((s) => s.selectedTemplate);
   const selectTemplate = useStore((s) => s.selectTemplate);
+  const editingTemplate = useStore((s) => s.editingTemplate);
+  const setEditingTemplate = useStore((s) => s.setEditingTemplate);
   const t = useT();
 
   return (
@@ -23,7 +25,7 @@ export function CargoList() {
           return (
             <div
               key={tpl.id}
-              className={`cargo-item ${selectedTemplate === tpl.id ? 'selected' : ''}`}
+              className={`cargo-item ${selectedTemplate === tpl.id ? 'selected' : ''} ${editingTemplate === tpl.id ? 'editing' : ''}`}
               onClick={() => selectTemplate(tpl.id === selectedTemplate ? null : tpl.id)}
             >
               <span className="swatch" style={{ background: tpl.color || '#888' }} />
@@ -50,16 +52,31 @@ export function CargoList() {
                 <span className="qty">
                   {placedCount}/{tpl.quantity}
                 </span>
-                <button
-                  className="btn danger"
-                  style={{ padding: '2px 6px', fontSize: 10 }}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (confirm(t.confirmDeleteParcel(tpl.name))) removeTemplate(tpl.id);
-                  }}
-                >
-                  {t.del}
-                </button>
+                <div style={{ display: 'flex', gap: 4 }}>
+                  <button
+                    className="btn"
+                    style={{ padding: '2px 6px', fontSize: 10 }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setEditingTemplate(
+                        editingTemplate === tpl.id ? null : tpl.id,
+                      );
+                    }}
+                    title={t.edit}
+                  >
+                    {t.edit}
+                  </button>
+                  <button
+                    className="btn danger"
+                    style={{ padding: '2px 6px', fontSize: 10 }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (confirm(t.confirmDeleteParcel(tpl.name))) removeTemplate(tpl.id);
+                    }}
+                  >
+                    {t.del}
+                  </button>
+                </div>
                 <input
                   type="number"
                   step="1"

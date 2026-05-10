@@ -41,11 +41,21 @@ export function AutoPanel() {
   function packAllHolds() {
     let total = 0;
     let working = placements.slice();
+    // remaining quantity per template that still has to be packed across holds
+    const remainingQty = new Map(templates.map((tpl) => [tpl.id, tpl.quantity]));
     for (const h of HOLDS) {
       working = working.filter((p) => p.holdId !== h.id);
-      const result = autoPackOneHold(h, templates, SHIP.tankTopLoad);
+      const tplsForThisHold = templates
+        .map((tpl) => ({ ...tpl, quantity: remainingQty.get(tpl.id) ?? 0 }))
+        .filter((tpl) => tpl.quantity > 0);
+      if (tplsForThisHold.length === 0) continue;
+      const result = autoPackOneHold(h, tplsForThisHold, SHIP.tankTopLoad);
       working.push(...result.placed);
       total += result.placed.length;
+      // deduct placed counts per template
+      for (const p of result.placed) {
+        remainingQty.set(p.templateId, (remainingQty.get(p.templateId) ?? 0) - 1);
+      }
     }
     setPlacements(working);
     setResult(t.allHoldsResult(total));

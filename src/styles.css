@@ -305,6 +305,18 @@ body {
   outline: 1px solid var(--accent);
 }
 
+.cargo-item.editing {
+  outline: 1px dashed #f59e0b;
+}
+
+.section.editing {
+  background: rgba(245, 158, 11, 0.06);
+}
+
+.section.editing h2 {
+  color: #f59e0b;
+}
+
 .cargo-item .swatch {
   width: 14px;
   height: 14px;
