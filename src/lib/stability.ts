@@ -108,6 +108,18 @@ export function computeHoldLoads(
     const nx = Math.ceil(hold.length / cellSize);
     const ny = Math.ceil(hold.breadth / cellSize);
     const grid = new Float64Array(nx * ny);
+    // Pre-aggregate the weight sitting above each stack column keyed by
+    // (holdId, x, y).  This is O(N) and avoids the O(N²) filter that
+    // used to dominate computeStability for thousands of placements.
+    const stackedWeightAbove = new Map<string, number>();
+    for (const q of placements) {
+      if (q.holdId !== r.holdId) continue;
+      if (q.tier === 0) continue;
+      const t = tplMap.get(q.templateId);
+      if (!t) continue;
+      const k = `${q.x.toFixed(3)},${q.y.toFixed(3)}`;
+      stackedWeightAbove.set(k, (stackedWeightAbove.get(k) ?? 0) + t.weight);
+    }
     for (const p of placements) {
       if (p.holdId !== r.holdId) continue;
       if (p.tier !== 0) continue;
@@ -115,19 +127,8 @@ export function computeHoldLoads(
       if (!tpl) continue;
       const lDim = p.rotated ? tpl.breadth : tpl.length;
       const wDim = p.rotated ? tpl.length : tpl.breadth;
-      // Stacked tiers above this one add to the floor load.  Find any
-      // stacked pieces sitting on top of this one and add their weight.
-      const stackedAbove = placements.filter(
-        (q) =>
-          q.holdId === p.holdId &&
-          q.tier > 0 &&
-          Math.abs(q.x - p.x) < 1e-3 &&
-          Math.abs(q.y - p.y) < 1e-3,
-      );
-      const stackedW = stackedAbove.reduce((sum, q) => {
-        const t = tplMap.get(q.templateId);
-        return sum + (t ? t.weight : 0);
-      }, 0);
+      const k = `${p.x.toFixed(3)},${p.y.toFixed(3)}`;
+      const stackedW = stackedWeightAbove.get(k) ?? 0;
       const totalW = tpl.weight + stackedW;
       const x0 = Math.max(0, Math.floor(p.x / cellSize));
       const x1 = Math.min(nx, Math.ceil((p.x + lDim) / cellSize));

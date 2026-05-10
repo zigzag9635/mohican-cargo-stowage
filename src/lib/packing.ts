@@ -71,6 +71,14 @@ export function packHold(
 ): { placed: PlacedPiece[]; unplaced: PieceInstance[] } {
   const clearance = opts.clearance ?? 0.05;
   const placedBoxes: Box3[] = [];
+  // Boxes that sit on the tank top (z = 0) only.  Stack-top placements
+  // re-use the same (x, y) footprint and are guaranteed not to overlap
+  // with anything outside that column, so they do NOT need to be
+  // checked against placedBoxes during overlap testing.  Restricting the
+  // overlap test to floorBoxes turns an O(N) per-placement scan into
+  // O(F) where F is the number of distinct floor footprints (≈ N /
+  // maxStackTier).
+  const floorBoxes: Box3[] = [];
   const placedPieces: PlacedPiece[] = [];
   // For each (x, y) footprint occupied by a stackable template, we
   // remember the next free z slot and the next tier index.  When the
@@ -132,7 +140,7 @@ export function packHold(
           h: piece.h,
         };
         if (!fitsInHold(box, hold)) continue;
-        if (placedBoxes.some((b) => boxesOverlap(box, b))) continue;
+        if (overlapsAnyFloor(box)) continue;
         // tank-top weight check — account for the worst-case full stack
         // that could end up on this footprint.
         const tiers = piece.stackable ? piece.maxStackTier : 1;
@@ -144,11 +152,32 @@ export function packHold(
     return null;
   }
 
+  // Fast overlap check that only looks at boxes on the tank top.
+  // Floor boxes are sorted by x so we can stop scanning once b.x is
+  // beyond the candidate.
+  function overlapsAnyFloor(box: Box3): boolean {
+    const xMax = box.x + box.l;
+    for (const b of floorBoxes) {
+      if (b.x >= xMax) break;
+      if (b.x + b.l <= box.x) continue;
+      if (boxesOverlap(box, b)) return true;
+    }
+    return false;
+  }
+
   function tryPlaceOnTopOfStack(piece: PieceInstance): PlacedPiece | null {
     if (!piece.stackable) return null;
-    for (const [, stack] of stackTops) {
+    // Iterate stacks in reverse insertion order: newest stack first,
+    // because that's the one most likely to still have room.
+    const keys = [...stackTops.keys()];
+    for (let i = keys.length - 1; i >= 0; i--) {
+      const stack = stackTops.get(keys[i])!;
       if (stack.templateId !== piece.templateId) continue;
-      if (stack.nextTier >= stack.maxTier) continue;
+      if (stack.nextTier >= stack.maxTier) {
+        // drop full stacks so future iterations stay short
+        stackTops.delete(keys[i]);
+        continue;
+      }
       const box: Box3 = {
         x: stack.x,
         y: stack.y,
@@ -158,7 +187,9 @@ export function packHold(
         h: piece.h,
       };
       if (!fitsInHold(box, hold)) continue;
-      if (placedBoxes.some((b) => boxesOverlap(box, b))) continue;
+      // The stack column is reserved by its tier-0 footprint, so we do
+      // not need to test against every placed box — nothing else can
+      // intrude on that column.
       return makePlacement(piece, box, stack.nextTier);
     }
     return null;
@@ -178,6 +209,17 @@ export function packHold(
       tier,
     };
     placedBoxes.push({ ...box });
+    if (box.z < 1e-6) {
+      // keep floor boxes sorted by x for fast overlap pruning
+      let lo = 0;
+      let hi = floorBoxes.length;
+      while (lo < hi) {
+        const mid = (lo + hi) >> 1;
+        if (floorBoxes[mid].x < box.x) lo = mid + 1;
+        else hi = mid;
+      }
+      floorBoxes.splice(lo, 0, { ...box });
+    }
     placedPieces.push(placement);
     if (piece.stackable && piece.maxStackTier > 1) {
       const key = `${piece.templateId}@${box.x.toFixed(3)},${box.y.toFixed(3)}`;
@@ -192,9 +234,12 @@ export function packHold(
         templateId: piece.templateId,
       });
     }
-    // emit new candidates
-    uniquePush({ x: box.x + box.l + clearance, y: box.y, z: box.z });
-    uniquePush({ x: box.x, y: box.y + box.w + clearance, z: box.z });
+    // Only emit ground candidates — stack tops are searched via the
+    // stackTops map and don't contribute to the BLF candidate list.
+    if (box.z < 1e-6) {
+      uniquePush({ x: box.x + box.l + clearance, y: box.y, z: 0 });
+      uniquePush({ x: box.x, y: box.y + box.w + clearance, z: 0 });
+    }
     return placement;
   }
 
