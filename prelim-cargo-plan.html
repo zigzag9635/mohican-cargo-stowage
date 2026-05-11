@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cargo Plan — M/V Mohican</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Aptos', 'Segoe UI', Calibri, Arial, sans-serif;
+    background: #c8cdd4;
+    color: #000;
+    padding: 12px;
+  }
+  .page {
+    max-width: 1150px;
+    margin: 0 auto;
+    background: #fff;
+    box-shadow: 0 2px 12px rgba(0,0,0,.18);
+    padding: 4px 2px;
+  }
+
+  /* ── Main table ──────────────────────────────────────── */
+  table.plan {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+  }
+  table.plan td, table.plan th {
+    border: 1px solid #000;
+    padding: 2px 4px;
+    vertical-align: middle;
+    font-size: 10pt;
+    overflow: hidden;
+  }
+  table.plan .nb  { border: none; }
+  table.plan .bt0 { border-top: none; }
+  table.plan .bb0 { border-bottom: none; }
+  table.plan .bl0 { border-left: none; }
+  table.plan .br0 { border-right: none; }
+
+  /* Inputs */
+  .fi {
+    border: none; outline: none; background: transparent;
+    font-family: inherit; color: #000; padding: 0 2px; width: 100%;
+  }
+  .fi:focus { background: #eef4ff; }
+  input[type=number]::-webkit-inner-spin-button,
+  input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; }
+  input[type=number] { -moz-appearance: textfield; }
+
+  /* Font helpers */
+  .f16  { font-size: 16pt; }
+  .f10  { font-size: 10pt; }
+  .f8   { font-size: 8pt; }
+  .f7   { font-size: 7pt; }
+  .bold { font-weight: 700; }
+  .ctr  { text-align: center; }
+
+  /* Holds section inner table */
+  table.htbl {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  table.htbl td, table.htbl th {
+    border: 1px solid #000;
+    padding: 1px 3px;
+    text-align: center;
+    font-size: 9pt;
+    vertical-align: middle;
+  }
+  table.htbl th {
+    font-weight: 600;
+    font-size: 7pt;
+    background: #f8f8f8;
+  }
+  table.htbl .fi {
+    text-align: center;
+    font-size: 9pt;
+  }
+  .tot-cell { font-weight: 700; font-size: 10pt; background: #f5f5f5; }
+
+  /* Buttons */
+  .add-btn {
+    display: inline-block; border: none; background: none;
+    color: #1a5cc8; font-size: 7pt; cursor: pointer;
+    font-weight: 600; padding: 0 4px;
+  }
+  .add-btn:hover { text-decoration: underline; }
+  .rm-btn {
+    background: none; border: none; color: #c00;
+    cursor: pointer; font-size: 8pt; font-weight: 700;
+    padding: 0 2px; line-height: 1;
+  }
+  .rm-btn:hover { color: #800; }
+
+  .toolbar {
+    display: flex; gap: 10px; justify-content: center;
+    margin: 10px auto; max-width: 1150px;
+  }
+  .toolbar button {
+    padding: 7px 22px; font-size: 10pt; font-weight: 600;
+    border: none; border-radius: 4px; cursor: pointer;
+  }
+  .btn-pdf { background: #1a5cc8; color: #fff; }
+  .btn-pdf:hover { background: #154ea8; }
+  .btn-clr { background: #e0e0e0; color: #333; }
+  .btn-clr:hover { background: #ccc; }
+
+  /* ── Print ───────────────────────────────────────────── */
+  @media print {
+    body { background: #fff; padding: 0; margin: 0; }
+    .page { box-shadow: none; max-width: 100%; padding: 0; }
+    .toolbar, .add-btn, .rm-btn, .no-print { display: none !important; }
+    @page { size: landscape A4; margin: 6mm; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page">
+<table class="plan">
+  <!-- Column widths matching Excel proportions: 23 columns -->
+  <colgroup>
+    <col style="width:3.3%"> <!-- 0 -->
+    <col style="width:4.9%"> <!-- 1 -->
+    <col style="width:4.9%"> <!-- 2 -->
+    <col style="width:2.4%"> <!-- 3 -->
+    <col style="width:2.4%"> <!-- 4 -->
+    <col style="width:2.4%"> <!-- 5 -->
+    <col style="width:2.3%"> <!-- 6 -->
+    <col style="width:3.5%"> <!-- 7 -->
+    <col style="width:4.9%"> <!-- 8 -->
+    <col style="width:5.2%"> <!-- 9 -->
+    <col style="width:5.0%"> <!-- 10 -->
+    <col style="width:11.8%"> <!-- 11 -->
+    <col style="width:5.2%"> <!-- 12 -->
+    <col style="width:5.2%"> <!-- 13 -->
+    <col style="width:4.9%"> <!-- 14 -->
+    <col style="width:3.9%"> <!-- 15 -->
+    <col style="width:4.7%"> <!-- 16 -->
+    <col style="width:4.3%"> <!-- 17 -->
+    <col style="width:4.5%"> <!-- 18 -->
+    <col style="width:4.4%"> <!-- 19 -->
+    <col style="width:4.7%"> <!-- 20 -->
+    <col style="width:1.2%"> <!-- 21 -->
+    <col style="width:4.3%"> <!-- 22 -->
+  </colgroup>
+
+  <!-- Spacer row -->
+  <tr><td colspan="23" class="nb" style="height:4px;padding:0"></td></tr>
+
+  <!-- CARGO PLAN title -->
+  <tr>
+    <td colspan="23" class="nb ctr f16 bold" style="padding:6px 0;border-bottom:2px solid #000">CARGO PLAN</td>
+  </tr>
+
+  <!-- Row 3: Version No / Date / Vessel / Voyage No -->
+  <tr>
+    <td colspan="8" class="f10" style="padding:4px">
+      LOADING OR UNLOADING PLAN Version No:
+      <input class="fi f10" id="versionNo" style="width:35px;display:inline-block">
+    </td>
+    <td colspan="3" class="f8">
+      Date: <input class="fi f8" id="planDate" style="width:85px;display:inline-block" placeholder="DD.MM.YYYY">
+    </td>
+    <td colspan="9" class="f16 ctr">
+      Vessel:&nbsp;&nbsp;<input class="fi f16 ctr" id="vessel" style="width:180px;display:inline-block" placeholder="MOHICAN">
+    </td>
+    <td colspan="3" class="f8">
+      Voyage No <input class="fi f8" id="voyageNo" style="width:55px;display:inline-block">
+    </td>
+  </tr>
+
+  <!-- Row 4: Load Port / Cargo / Technical params -->
+  <tr>
+    <td colspan="8" class="f10" style="padding:4px">
+      Load/Unload Port: <input class="fi f10" id="loadPort">
+    </td>
+    <td colspan="3" class="f8 bold">
+      Cargo(es): <input class="fi f8" id="cargoes">
+    </td>
+    <td class="f8">
+      Assumed stowage factor of cargo(es):
+      <input class="fi f8" id="stowageFactor">
+    </td>
+    <td colspan="4" class="f8">
+      Ballast pumping rate: <input class="fi f8" id="ballastRate" style="width:70px;display:inline-block" placeholder="2x350m3">
+    </td>
+    <td colspan="2" class="f8">
+      Dock water density <input class="fi f8" id="dockDensity" style="width:45px;display:inline-block" placeholder="1,025">
+    </td>
+    <td colspan="2" class="f8">
+      Max draught available (HW):
+      <input class="fi f8" id="maxDraughtHW">
+    </td>
+    <td colspan="2" class="f8">
+      Max air draught in berth (m):
+      <input class="fi f8" id="maxAirDraught">
+    </td>
+  </tr>
+
+  <!-- Row 5: To/From Port / Last Cargo / Loaders / Rate / Draughts -->
+  <tr>
+    <td colspan="8" class="f10" style="padding:4px">
+      To/From Port: <input class="fi f10" id="toFromPort">
+    </td>
+    <td colspan="3" class="f8">
+      Last Cargo: <input class="fi f8" id="lastCargo">
+    </td>
+    <td class="f8">
+      No. of loaders/ dischargers:
+      <input class="fi f8" id="numLoaders">
+    </td>
+    <td colspan="4" class="f8">
+      Load/discharge rate: <input class="fi f8" id="loadRate" style="width:70px;display:inline-block">
+    </td>
+    <td colspan="2" class="f8"></td>
+    <td colspan="2" class="f8">
+      Min. draught available (LW):
+      <input class="fi f8" id="minDraughtLW">
+    </td>
+    <td colspan="3" class="f8">
+      Max sailing/ arrival draught (m):
+      <input class="fi f8" id="maxSailDraught" style="width:55px;display:inline-block" placeholder="m">
+    </td>
+  </tr>
+
+  <!-- Row 6: Hold headers -->
+  <tr>
+    <td colspan="7" class="nb" style="border-right:1px solid #000;padding:0"></td>
+    <td colspan="4" class="f8 ctr bold" style="vertical-align:bottom;padding:3px;background:#f8f8f8">HOLD NO 4</td>
+    <td colspan="2" class="f8 ctr bold" style="vertical-align:bottom;padding:3px;background:#f8f8f8">HOLD NO 3</td>
+    <td colspan="4" class="f8 ctr bold" style="vertical-align:bottom;padding:3px;background:#f8f8f8">HOLD NO 2</td>
+    <td colspan="4" class="f8 ctr bold" style="vertical-align:bottom;padding:3px;background:#f8f8f8">HOLD NO 1</td>
+    <td colspan="2" class="nb" style="padding:0"></td>
+  </tr>
+
+  <!-- Holds data area: single row with nested hold tables -->
+  <tr>
+    <td colspan="7" class="nb bt0 bb0" style="vertical-align:top;padding:2px 4px;border-right:1px solid #000">
+      <div style="font-size:8pt;line-height:1.8">
+        <b>Tonnes:</b><br>
+        <b>Grade:</b><br>
+        <b>Totals:</b> <span id="grandTotal" class="f10 bold">0</span>
+      </div>
+    </td>
+    <td colspan="4" style="padding:0;vertical-align:top" id="h4"></td>
+    <td colspan="2" style="padding:0;vertical-align:top" id="h3"></td>
+    <td colspan="4" style="padding:0;vertical-align:top" id="h2"></td>
+    <td colspan="4" style="padding:0;vertical-align:top" id="h1"></td>
+    <td colspan="2" class="nb bt0 bb0" style="padding:0"></td>
+  </tr>
+
+  <!-- Drafts row -->
+  <tr>
+    <td colspan="2" class="nb" style="padding:0"></td>
+    <td class="f10 bold" style="padding:2px 4px">&nbsp;AFT:</td>
+    <td colspan="1" class="f10"><input class="fi f10" id="draftAft" placeholder="m"></td>
+    <td colspan="7" class="nb" style="padding:0"></td>
+    <td class="f10 bold" style="padding:2px 4px">&nbsp;MID:</td>
+    <td class="f10"><input class="fi f10" id="draftMid" placeholder="m"></td>
+    <td colspan="6" class="nb" style="padding:0"></td>
+    <td class="f10 bold" style="padding:2px 4px">&nbsp;FWD:</td>
+    <td colspan="2" class="f10"><input class="fi f10" id="draftFwd" placeholder="m"></td>
+  </tr>
+
+  <!-- Spacing -->
+  <tr><td colspan="23" class="nb" style="height:8px;padding:0"></td></tr>
+  <tr><td colspan="23" class="nb" style="height:8px;padding:0"></td></tr>
+
+  <!-- Signature row -->
+  <tr>
+    <td colspan="10" class="nb" style="padding:0"></td>
+    <td colspan="11" class="nb ctr f10" style="padding:8px 0">
+      Chief Officer&nbsp;&nbsp;m/v&nbsp;&nbsp;
+      <input class="fi f10 ctr" id="vesselSign" style="width:90px;display:inline-block" placeholder="MOHICAN">
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      <input class="fi f10 ctr" id="chiefOfficer" style="width:150px;display:inline-block;border-bottom:1px solid #000">
+    </td>
+    <td colspan="2" class="nb" style="padding:0"></td>
+  </tr>
+</table>
+</div>
+
+<div class="toolbar no-print">
+  <button class="btn-pdf" onclick="window.print()">Export to PDF</button>
+  <button class="btn-clr" onclick="clearForm()">Clear Form</button>
+</div>
+
+<script>
+const HOLDS = [4, 3, 2, 1];
+const DEFAULT_TIERS = 3;
+const data = {};
+HOLDS.forEach(h => {
+  data[h] = [];
+  for (let i = 0; i < DEFAULT_TIERS; i++) data[h].push({ t: '', g: '' });
+});
+
+function render() {
+  HOLDS.forEach(h => {
+    const el = document.getElementById('h' + h);
+    const tiers = data[h];
+    const total = tiers.reduce((s, r) => s + (parseFloat(r.t) || 0), 0);
+
+    let rows = '';
+    for (let i = 0; i < tiers.length; i++) {
+      const rm = tiers.length > 1
+        ? `<td class="no-print" style="width:16px;padding:0;border:none"><button class="rm-btn" onclick="rmT(${h},${i})">&times;</button></td>`
+        : `<td class="no-print" style="width:16px;padding:0;border:none"></td>`;
+      rows += `<tr>
+        <td style="width:20px;color:#888;font-size:7pt">${i + 1}</td>
+        <td><input class="fi" type="number" step="any" min="0" value="${tiers[i].t}" data-h="${h}" data-i="${i}" data-f="t" oninput="upd(this)"></td>
+        <td><input class="fi" type="text" value="${esc(tiers[i].g)}" data-h="${h}" data-i="${i}" data-f="g" oninput="upd(this)"></td>
+        ${rm}
+      </tr>`;
+    }
+
+    el.innerHTML = `
+      <table class="htbl">
+        <tr><th style="width:20px">Tier</th><th>Tonnes</th><th>Grade</th><th class="no-print" style="width:16px;border:none"></th></tr>
+        ${rows}
+        <tr><td colspan="2" class="tot-cell">${fmt(total)}</td><td class="tot-cell">Total</td><td class="no-print" style="border:none"></td></tr>
+      </table>
+      <div class="no-print" style="text-align:center"><button class="add-btn" onclick="addT(${h})">+ tier</button></div>`;
+  });
+  updGrand();
+}
+
+function upd(el) {
+  const h = +el.dataset.h, i = +el.dataset.i, f = el.dataset.f;
+  data[h][i][f] = el.value;
+  const tiers = data[h];
+  const total = tiers.reduce((s, r) => s + (parseFloat(r.t) || 0), 0);
+  const cell = document.getElementById('h' + h);
+  const tc = cell.querySelector('.tot-cell');
+  if (tc) tc.textContent = fmt(total);
+  updGrand();
+}
+
+function addT(h) {
+  data[h].push({ t: '', g: '' });
+  render();
+  const inp = document.querySelectorAll(`input[data-h="${h}"][data-f="t"]`);
+  if (inp.length) inp[inp.length - 1].focus();
+}
+
+function rmT(h, i) {
+  data[h].splice(i, 1);
+  if (!data[h].length) data[h].push({ t: '', g: '' });
+  render();
+}
+
+function updGrand() {
+  let g = 0;
+  HOLDS.forEach(h => { g += data[h].reduce((s, r) => s + (parseFloat(r.t) || 0), 0); });
+  document.getElementById('grandTotal').textContent = fmt(g);
+}
+
+function fmt(n) { return n === 0 ? '0' : (n % 1 === 0 ? n.toLocaleString('en') : n.toLocaleString('en', { maximumFractionDigits: 2 })); }
+function esc(s) { return (s || '').replace(/"/g, '&quot;'); }
+
+function clearForm() {
+  if (!confirm('Clear all fields?')) return;
+  document.querySelectorAll('.page input').forEach(e => { e.value = ''; });
+  HOLDS.forEach(h => {
+    data[h] = [];
+    for (let i = 0; i < DEFAULT_TIERS; i++) data[h].push({ t: '', g: '' });
+  });
+  render();
+}
+
+// Init date
+const d = new Date();
+document.getElementById('planDate').value = String(d.getDate()).padStart(2, '0') + '.' + String(d.getMonth() + 1).padStart(2, '0') + '.' + d.getFullYear();
+
+render();
+</script>
+</body>
+</html>
