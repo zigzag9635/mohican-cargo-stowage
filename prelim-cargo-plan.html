@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Preliminary Cargo Plan — M/V Mohican</title>
+<style>
+  /* ── Reset & base ─────────────────────────────────────── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { font-size: 13px; }
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #e8ecf1;
+    color: #1a1a1a;
+    padding: 20px;
+  }
+
+  /* ── Page container ───────────────────────────────────── */
+  .page {
+    max-width: 1200px;
+    margin: 0 auto;
+    background: #fff;
+    border: 1px solid #bbb;
+    padding: 28px 32px 24px;
+    box-shadow: 0 2px 12px rgba(0,0,0,.12);
+  }
+
+  /* ── Title ────────────────────────────────────────────── */
+  h1 {
+    text-align: center;
+    font-size: 1.55rem;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    border-bottom: 2px solid #222;
+    padding-bottom: 6px;
+    margin-bottom: 14px;
+  }
+
+  /* ── Info grid ────────────────────────────────────────── */
+  .info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap: 6px 14px;
+    margin-bottom: 14px;
+  }
+  .info-grid .span2 { grid-column: span 2; }
+  .info-grid .span3 { grid-column: span 3; }
+  .info-grid .span4 { grid-column: span 4; }
+
+  .field { display: flex; flex-direction: column; }
+  .field label {
+    font-size: .78rem;
+    font-weight: 600;
+    color: #555;
+    margin-bottom: 2px;
+    white-space: nowrap;
+  }
+  .field input, .field select {
+    border: 1px solid #bbb;
+    border-radius: 3px;
+    padding: 4px 6px;
+    font-size: .92rem;
+    font-family: inherit;
+    background: #fafbfc;
+    transition: border-color .15s;
+  }
+  .field input:focus, .field select:focus {
+    outline: none;
+    border-color: #3b82f6;
+    background: #fff;
+  }
+  .field input.narrow { max-width: 120px; }
+
+  /* ── Section dividers ─────────────────────────────────── */
+  .section-title {
+    font-size: .85rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #444;
+    border-bottom: 1px solid #ccc;
+    padding-bottom: 3px;
+    margin: 16px 0 10px;
+    letter-spacing: .04em;
+  }
+
+  /* ── Ship SVG ─────────────────────────────────────────── */
+  .ship-wrapper {
+    display: flex;
+    justify-content: center;
+    margin: 10px 0 6px;
+  }
+  .ship-svg { width: 100%; max-width: 1100px; }
+
+  /* ── Hold tables ──────────────────────────────────────── */
+  .holds-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  .hold-card {
+    border: 1.5px solid #333;
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .hold-card-header {
+    background: #2c3e50;
+    color: #fff;
+    text-align: center;
+    font-weight: 700;
+    font-size: .88rem;
+    padding: 4px 0;
+    letter-spacing: .04em;
+  }
+  .hold-card table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: .84rem;
+  }
+  .hold-card th, .hold-card td {
+    border: 1px solid #ccc;
+    padding: 3px 5px;
+    text-align: center;
+  }
+  .hold-card th {
+    background: #ecf0f3;
+    font-weight: 600;
+    font-size: .76rem;
+    color: #555;
+  }
+  .hold-card td input {
+    width: 100%;
+    border: none;
+    background: transparent;
+    text-align: center;
+    font-size: .84rem;
+    font-family: inherit;
+    padding: 2px 0;
+  }
+  .hold-card td input:focus {
+    outline: none;
+    background: #eef4ff;
+  }
+  .hold-card .total-row td {
+    background: #f0f4f8;
+    font-weight: 700;
+    font-size: .88rem;
+  }
+  .hold-card .add-row-btn {
+    display: block;
+    width: 100%;
+    border: none;
+    background: #f5f7fa;
+    color: #3b82f6;
+    font-size: .78rem;
+    padding: 3px 0;
+    cursor: pointer;
+    font-weight: 600;
+  }
+  .hold-card .add-row-btn:hover { background: #e0e7f1; }
+
+  .remove-btn {
+    background: none;
+    border: none;
+    color: #dc2626;
+    cursor: pointer;
+    font-size: .82rem;
+    padding: 0 3px;
+    font-weight: 700;
+    line-height: 1;
+  }
+  .remove-btn:hover { color: #991b1b; }
+
+  /* Hide number spinners */
+  input[type=number]::-webkit-inner-spin-button,
+  input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+  input[type=number] { -moz-appearance: textfield; }
+
+  /* ── Drafts ───────────────────────────────────────────── */
+  .drafts-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 14px;
+    margin: 14px 0;
+  }
+  .draft-box {
+    border: 1.5px solid #333;
+    border-radius: 4px;
+    text-align: center;
+    padding: 6px 10px;
+  }
+  .draft-box label {
+    font-weight: 700;
+    font-size: .82rem;
+    color: #555;
+    display: block;
+    margin-bottom: 2px;
+  }
+  .draft-box input {
+    border: 1px solid #bbb;
+    border-radius: 3px;
+    text-align: center;
+    font-size: 1rem;
+    padding: 3px 6px;
+    width: 100px;
+    font-family: inherit;
+  }
+  .draft-box input:focus { outline: none; border-color: #3b82f6; }
+
+  /* ── Signature ────────────────────────────────────────── */
+  .signature-row {
+    display: flex;
+    justify-content: flex-end;
+    align-items: flex-end;
+    gap: 14px;
+    margin-top: 20px;
+    padding-top: 10px;
+    border-top: 1px solid #ccc;
+  }
+  .signature-row .field { min-width: 200px; }
+
+  /* ── Toolbar ──────────────────────────────────────────── */
+  .toolbar {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 18px;
+  }
+  .toolbar button {
+    padding: 8px 22px;
+    font-size: .92rem;
+    font-weight: 600;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background .15s;
+  }
+  .btn-pdf { background: #2563eb; color: #fff; }
+  .btn-pdf:hover { background: #1d4ed8; }
+  .btn-clear { background: #e5e7eb; color: #333; }
+  .btn-clear:hover { background: #d1d5db; }
+
+  /* ── Grand total ──────────────────────────────────────── */
+  .grand-total {
+    text-align: center;
+    font-size: 1.05rem;
+    font-weight: 700;
+    margin: 8px 0 2px;
+    color: #1e3a5f;
+  }
+
+  /* ── Print / PDF styles ───────────────────────────────── */
+  @media print {
+    body { background: #fff; padding: 0; }
+    .page { border: none; box-shadow: none; padding: 10px 14px; max-width: 100%; }
+    .toolbar { display: none !important; }
+    .add-row-btn { display: none !important; }
+    .remove-btn { display: none !important; }
+    .no-print { display: none !important; }
+    .field input, .field select, .draft-box input, .hold-card td input {
+      border: none !important;
+      background: transparent !important;
+    }
+    h1 { font-size: 1.3rem; }
+    @page { size: landscape A4; margin: 8mm; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page" id="plan">
+
+  <h1>Preliminary Cargo Plan</h1>
+
+  <!-- ═══ Row 1: Version / Date / Vessel / Voyage ═══ -->
+  <div class="info-grid">
+    <div class="field span2">
+      <label>Loading or Unloading Plan — Version No</label>
+      <input id="versionNo" type="text" placeholder="e.g. 1">
+    </div>
+    <div class="field">
+      <label>Date</label>
+      <input id="planDate" type="date">
+    </div>
+    <div class="field">
+      <label>Voyage No</label>
+      <input id="voyageNo" type="text" placeholder="e.g. 04/26">
+    </div>
+  </div>
+
+  <!-- ═══ Row 2: Vessel / Port / Cargo ═══ -->
+  <div class="info-grid">
+    <div class="field">
+      <label>Vessel</label>
+      <input id="vessel" type="text" placeholder="e.g. MOHICAN">
+    </div>
+    <div class="field span2">
+      <label>Load / Unload Port</label>
+      <input id="loadPort" type="text" placeholder="e.g. FIGUEIRA DA FOZ / PORTUGAL">
+    </div>
+    <div class="field">
+      <label>Cargo(es)</label>
+      <input id="cargoes" type="text" placeholder="e.g. Sole, cargo unitized woodpulp">
+    </div>
+  </div>
+
+  <!-- ═══ Row 3: From-To / Last Cargo ═══ -->
+  <div class="info-grid">
+    <div class="field span2">
+      <label>To / From Port</label>
+      <input id="toFromPort" type="text" placeholder="e.g. CHALKIS / GREECE + CONSTANTA / ROMANIA">
+    </div>
+    <div class="field span2">
+      <label>Last Cargo</label>
+      <input id="lastCargo" type="text" placeholder="e.g. Sugar beet pulp pellets in bulk">
+    </div>
+  </div>
+
+  <!-- ═══ Row 4: Technical parameters ═══ -->
+  <div class="section-title">Technical Parameters</div>
+  <div class="info-grid">
+    <div class="field">
+      <label>Assumed Stowage Factor</label>
+      <input id="stowageFactor" type="text" placeholder="m³/t">
+    </div>
+    <div class="field">
+      <label>Ballast Pumping Rate</label>
+      <input id="ballastRate" type="text" placeholder="e.g. 2×350 m³">
+    </div>
+    <div class="field">
+      <label>Dock Water Density</label>
+      <input id="dockDensity" type="text" placeholder="e.g. 1.025">
+    </div>
+    <div class="field">
+      <label>No. of Loaders / Dischargers</label>
+      <input id="numLoaders" type="text" placeholder="">
+    </div>
+  </div>
+
+  <div class="info-grid">
+    <div class="field">
+      <label>Load / Discharge Rate</label>
+      <input id="loadRate" type="text" placeholder="">
+    </div>
+    <div class="field">
+      <label>Max Draught Available (HW), m</label>
+      <input id="maxDraughtHW" type="text" placeholder="m">
+    </div>
+    <div class="field">
+      <label>Min Draught Available (LW), m</label>
+      <input id="minDraughtLW" type="text" placeholder="m">
+    </div>
+    <div class="field">
+      <label>Max Air Draught in Berth, m</label>
+      <input id="maxAirDraught" type="text" placeholder="m">
+    </div>
+  </div>
+
+  <div class="info-grid">
+    <div class="field">
+      <label>Max Sailing / Arrival Draught, m</label>
+      <input id="maxSailDraught" type="text" placeholder="e.g. 5.70">
+    </div>
+  </div>
+
+  <!-- ═══ Ship profile SVG ═══ -->
+  <div class="section-title">Cargo Holds Layout</div>
+  <div class="ship-wrapper">
+    <svg class="ship-svg" viewBox="0 0 1100 160" xmlns="http://www.w3.org/2000/svg">
+      <!-- hull outline -->
+      <path d="M 60,30 L 200,30 200,10 900,10 900,30 1040,30 Q 1090,80 1040,130
+               L 900,130 900,150 200,150 200,130 60,130 Q 10,80 60,30 Z"
+            fill="#dce6f0" stroke="#2c3e50" stroke-width="2.5"/>
+      <!-- bulkheads & hold labels -->
+      <!-- Hold 4 (aft/stern = left) -->
+      <line x1="210" y1="10" x2="210" y2="150" stroke="#2c3e50" stroke-width="2"/>
+      <rect x="70" y="35" width="135" height="90" rx="3" fill="#e8f4fd" stroke="#4a90d9" stroke-width="1.5"/>
+      <text x="137" y="72" text-anchor="middle" font-size="14" font-weight="700" fill="#2c3e50">HOLD 4</text>
+      <text x="137" y="90" text-anchor="middle" font-size="11" fill="#555" class="hold-tonnes-label" data-hold="4">0 t</text>
+      <!-- Hold 3 -->
+      <line x1="430" y1="10" x2="430" y2="150" stroke="#2c3e50" stroke-width="2"/>
+      <rect x="218" y="18" width="205" height="124" rx="3" fill="#e8f4fd" stroke="#4a90d9" stroke-width="1.5"/>
+      <text x="320" y="72" text-anchor="middle" font-size="14" font-weight="700" fill="#2c3e50">HOLD 3</text>
+      <text x="320" y="90" text-anchor="middle" font-size="11" fill="#555" class="hold-tonnes-label" data-hold="3">0 t</text>
+      <!-- Hold 2 -->
+      <line x1="660" y1="10" x2="660" y2="150" stroke="#2c3e50" stroke-width="2"/>
+      <rect x="438" y="18" width="215" height="124" rx="3" fill="#e8f4fd" stroke="#4a90d9" stroke-width="1.5"/>
+      <text x="545" y="72" text-anchor="middle" font-size="14" font-weight="700" fill="#2c3e50">HOLD 2</text>
+      <text x="545" y="90" text-anchor="middle" font-size="11" fill="#555" class="hold-tonnes-label" data-hold="2">0 t</text>
+      <!-- Hold 1 (fwd/bow = right) -->
+      <rect x="668" y="35" width="225" height="90" rx="3" fill="#e8f4fd" stroke="#4a90d9" stroke-width="1.5"/>
+      <text x="780" y="72" text-anchor="middle" font-size="14" font-weight="700" fill="#2c3e50">HOLD 1</text>
+      <text x="780" y="90" text-anchor="middle" font-size="11" fill="#555" class="hold-tonnes-label" data-hold="1">0 t</text>
+      <!-- labels -->
+      <text x="50" y="85" text-anchor="middle" font-size="11" font-weight="600" fill="#888">AFT</text>
+      <text x="1055" y="85" text-anchor="middle" font-size="11" font-weight="600" fill="#888">FWD</text>
+    </svg>
+  </div>
+
+  <!-- ═══ Hold cards ═══ -->
+  <div class="holds-row">
+    <!-- generated by JS -->
+  </div>
+
+  <div class="grand-total">Grand Total: <span id="grandTotal">0</span> t</div>
+
+  <!-- ═══ Drafts ═══ -->
+  <div class="section-title">Estimated Drafts After Completion</div>
+  <div class="drafts-row">
+    <div class="draft-box">
+      <label>AFT (m)</label>
+      <input id="draftAft" type="text" placeholder="0.0">
+    </div>
+    <div class="draft-box">
+      <label>MID (m)</label>
+      <input id="draftMid" type="text" placeholder="0.0">
+    </div>
+    <div class="draft-box">
+      <label>FWD (m)</label>
+      <input id="draftFwd" type="text" placeholder="0.0">
+    </div>
+  </div>
+
+  <!-- ═══ Signature ═══ -->
+  <div class="signature-row">
+    <div class="field">
+      <label>Chief Officer</label>
+      <input id="chiefOfficer" type="text" placeholder="Name">
+    </div>
+    <div class="field">
+      <label>M/V</label>
+      <input id="vesselSign" type="text" placeholder="MOHICAN">
+    </div>
+  </div>
+</div>
+
+<!-- ═══ Toolbar ═══ -->
+<div class="toolbar">
+  <button class="btn-pdf" onclick="exportPDF()">Export to PDF</button>
+  <button class="btn-clear" onclick="clearForm()">Clear Form</button>
+</div>
+
+<script>
+/* ─────────────────────── Hold cards logic ─────────────────────── */
+
+const HOLDS = [4, 3, 2, 1]; // aft → fwd (display order)
+
+// Per-hold cargo rows: [ { tonnes: '', grade: '' }, ... ]
+const holdData = {};
+HOLDS.forEach(h => { holdData[h] = [{ tonnes: '', grade: '' }]; });
+
+function renderHolds() {
+  const container = document.querySelector('.holds-row');
+  container.innerHTML = '';
+
+  HOLDS.forEach(holdNo => {
+    const card = document.createElement('div');
+    card.className = 'hold-card';
+
+    const rows = holdData[holdNo];
+    let rowsHtml = rows.map((r, i) => `
+      <tr>
+        <td><input type="number" step="any" min="0" value="${r.tonnes}"
+              data-hold="${holdNo}" data-idx="${i}" data-field="tonnes"
+              oninput="onCargoInput(this)" placeholder="0"></td>
+        <td><input type="text" value="${esc(r.grade)}"
+              data-hold="${holdNo}" data-idx="${i}" data-field="grade"
+              oninput="onCargoInput(this)" placeholder="—"></td>
+        <td class="no-print">${rows.length > 1
+            ? `<button class="remove-btn" onclick="removeRow(${holdNo},${i})" title="Remove">&times;</button>`
+            : ''}</td>
+      </tr>`).join('');
+
+    const total = rows.reduce((s, r) => s + (parseFloat(r.tonnes) || 0), 0);
+
+    card.innerHTML = `
+      <div class="hold-card-header">Hold No ${holdNo}</div>
+      <table>
+        <thead><tr><th>Tonnes</th><th>Grade</th><th class="no-print" style="width:26px"></th></tr></thead>
+        <tbody>${rowsHtml}</tbody>
+        <tr class="total-row"><td>${fmt(total)}</td><td colspan="2">Total</td></tr>
+      </table>
+      <button class="add-row-btn" onclick="addRow(${holdNo})">+ Add cargo</button>`;
+    container.appendChild(card);
+  });
+
+  updateTotals();
+}
+
+function onCargoInput(el) {
+  const h = +el.dataset.hold, i = +el.dataset.idx, f = el.dataset.field;
+  holdData[h][i][f] = el.value;
+  // re-render only totals (faster) unless structure changed
+  updateTotals();
+}
+
+function addRow(holdNo) {
+  holdData[holdNo].push({ tonnes: '', grade: '' });
+  renderHolds();
+  // focus new tonnes input
+  const inputs = document.querySelectorAll(`input[data-hold="${holdNo}"][data-field="tonnes"]`);
+  if (inputs.length) inputs[inputs.length - 1].focus();
+}
+
+function removeRow(holdNo, idx) {
+  holdData[holdNo].splice(idx, 1);
+  if (holdData[holdNo].length === 0) holdData[holdNo].push({ tonnes: '', grade: '' });
+  renderHolds();
+}
+
+function updateTotals() {
+  let grand = 0;
+  HOLDS.forEach(h => {
+    const total = holdData[h].reduce((s, r) => s + (parseFloat(r.tonnes) || 0), 0);
+    grand += total;
+    // update total row in card
+    const card = document.querySelectorAll('.hold-card')[HOLDS.indexOf(h)];
+    if (card) {
+      const totalCell = card.querySelector('.total-row td');
+      if (totalCell) totalCell.textContent = fmt(total);
+    }
+    // update SVG label
+    const svgLabel = document.querySelector(`.hold-tonnes-label[data-hold="${h}"]`);
+    if (svgLabel) svgLabel.textContent = fmt(total) + ' t';
+  });
+  document.getElementById('grandTotal').textContent = fmt(grand);
+}
+
+function fmt(n) { return n % 1 === 0 ? n.toLocaleString('en') : n.toLocaleString('en', { maximumFractionDigits: 2 }); }
+function esc(s) { return (s || '').replace(/"/g, '&quot;'); }
+
+/* ─────────────────────── Export / Clear ────────────────────────── */
+
+function exportPDF() {
+  window.print();
+}
+
+function clearForm() {
+  if (!confirm('Clear all fields?')) return;
+  document.querySelectorAll('.page input').forEach(el => { el.value = ''; });
+  HOLDS.forEach(h => { holdData[h] = [{ tonnes: '', grade: '' }]; });
+  renderHolds();
+}
+
+/* ─────────────────────── Init ─────────────────────────────────── */
+
+// Set today's date
+document.getElementById('planDate').valueAsDate = new Date();
+
+renderHolds();
+</script>
+</body>
+</html>
